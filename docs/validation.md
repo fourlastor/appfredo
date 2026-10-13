@@ -18,6 +18,8 @@ The signed, resource-only test APK was 532,888 bytes; its butler v15.31.0 patch 
 
 The Android tests use local fixture assets through an injected downloader. GitHub discovery and HTTPS transfer validation are tested separately with controlled HTTP connection responses. No end-to-end install from a live GitHub release containing an Appfredo manifest has been performed yet; no such repository was supplied or published during this work.
 
-ARM64 was compiled, not exercised on physical hardware. Android 8/minimum-SDK and Android 16/target-SDK devices were not runtime-tested. Interrupted transfer resumption, background scheduling, private repositories, split APKs, key rotation, and Appfredo self-update have not been validated.
+ARM64 was compiled, not exercised on physical hardware. Android 8/minimum-SDK and Android 16/target-SDK devices were not runtime-tested. Interrupted transfer resumption, background scheduling, private repositories, split APKs, and key rotation have not been validated.
+
+On 14 October, a subsequent [Appfredo self-update test](self-update-emulator.md) passed on the API 35 x86_64 emulator: the running v1 downloaded only a local HTTP Wharf patch, reconstructed its signed v2, and updated itself through Android's confirmation UI. The installed v2 hash matched the compiled APK, and the library survived reopening. The temporary local source and version changes were then removed.
 
 The GitHub Actions workflow is included but has not run remotely. No production release was signed or published.
