@@ -1,0 +1,12 @@
+.gradle/
+.kotlin/
+.tools/
+**/build/
+local.properties
+*.keystore
+*.jks
+app/libs/*.aar
+app/libs/*-sources.jar
+__pycache__/
+.idea/
+captures/
