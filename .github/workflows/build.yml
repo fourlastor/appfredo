@@ -8,7 +8,7 @@ jobs:
   android:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/android-setup
       - name: Test native patch verification
         run: |
@@ -16,7 +16,7 @@ jobs:
           go -C native/wharf test ./...
       - name: Build and check Android app
         run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: appfredo-debug
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -37,7 +37,16 @@ jobs:
       # The butler binary in that archive; the same build was used to check Appfredo's patching end to end.
       BUTLER_SHA256: 85ee65c71b59412a83d83bf332faab62c2c38f0ed569c9b13dadadf9823c7129
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          # Full history, to tell whether the tagged commit is on main.
+          fetch-depth: 0
+      - name: Check that the tag is on main
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME does not point at a commit on main."
+            exit 1
+          fi
       - uses: ./.github/actions/android-setup
       - name: Butler
         run: |
@@ -64,7 +73,7 @@ jobs:
           GRADLE_OPTS: -Dorg.gradle.daemon=false
           APPFREDO_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: bash scripts/release.sh "$GITHUB_REF_NAME"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: appfredo-${{ github.ref_name }}
           path: build/release/${{ github.ref_name }}/
