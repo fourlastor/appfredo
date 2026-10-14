@@ -36,7 +36,10 @@ def package_info(apk, aapt):
 
 def signing_keys(apk, apksigner):
     result = subprocess.run([apksigner, "verify", "--print-certs", str(apk)], check=True, capture_output=True, text=True)
-    keys = set(re.findall(r"Signer #\d+ certificate SHA-256 digest: ([0-9a-f]+)", result.stdout))
+    # Older apksigners print "Signer #1 certificate …"; 37 names the scheme ("V3.0 Signer: …", "V2 Signer #2: …",
+    # "V3.2 Hybrid PQC Signer: (minSdkVersion=…) …"). A source stamp says where an APK came from, not who signed it.
+    signers = re.findall(r"^(.*Signer.*) certificate SHA-256 digest: ([0-9a-f]{64})$", result.stdout, re.MULTILINE)
+    keys = {digest for signer, digest in signers if not signer.startswith("Source Stamp")}
     if not keys:
         raise ValueError("APK has no verified signing certificate")
     return keys

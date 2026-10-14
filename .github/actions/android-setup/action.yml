@@ -17,7 +17,7 @@ runs:
       run: |
         # The runner image already ships both, and Gradle fetches the SDK platform itself. sdkmanager is not on
         # PATH there, so it is called by its full path, and only if the image ever stops shipping them.
-        for package in 'ndk;29.0.14206865' 'build-tools;36.0.0'; do
+        for package in 'ndk;29.0.14206865' 'build-tools;37.0.0'; do
           [ -d "$ANDROID_HOME/${package/;//}" ] || "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "$package"
         done
     - name: Build Wharf for Android

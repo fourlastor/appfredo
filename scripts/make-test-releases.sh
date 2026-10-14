@@ -3,7 +3,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 sdk="${ANDROID_HOME:-$HOME/Android/Sdk}"
-build_tools="${APPFREDO_BUILD_TOOLS:-$sdk/build-tools/36.0.0}"
+build_tools="${APPFREDO_BUILD_TOOLS:-$sdk/build-tools/37.0.0}"
 fixture="$root/build/fixtures"
 mkdir -p "$fixture"
 if [[ ! -f "$fixture/test.keystore" ]]; then
@@ -25,7 +25,7 @@ payload[65536:65540] = version.to_bytes(4, 'little')
 <application android:label="Appfredo Fixture" android:hasCode="false" android:debuggable="true"/>
 </manifest>''')
 PY
-    "$build_tools/aapt2" link -I "$sdk/platforms/android-36/android.jar" --manifest "$work/AndroidManifest.xml" -A "$work/assets" -0 bin -o "$work/unsigned.apk"
+    "$build_tools/aapt2" link -I "$sdk/platforms/android-37.0/android.jar" --manifest "$work/AndroidManifest.xml" -A "$work/assets" -0 bin -o "$work/unsigned.apk"
     "$build_tools/zipalign" -f -P 16 4 "$work/unsigned.apk" "$work/aligned.apk"
     "$build_tools/apksigner" sign --ks "$fixture/test.keystore" --ks-key-alias fixture --ks-pass pass:android --key-pass pass:android \
         --out "$fixture/v$version.apk" "$work/aligned.apk"

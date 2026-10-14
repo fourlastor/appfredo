@@ -6,6 +6,8 @@ plugins {
 android {
     namespace = "app.appfredo"
     compileSdk = 37
+    // The release scripts verify with the same version. AGP 9.4 would otherwise use 36.0.0.
+    buildToolsVersion = "37.0.0"
     defaultConfig {
         applicationId = "app.appfredo"
         minSdk = 26

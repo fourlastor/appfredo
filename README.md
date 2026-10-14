@@ -18,12 +18,12 @@ The visual identity is banana yellow and tailcoat black: a butler, a serving clo
 
 ## Build
 
-Requirements: JDK 21, Go 1.27.2, Android SDK platform 37, build-tools 36.0.0, and NDK r29 (`29.0.14206865`). The app compiles against API 37 for Material 3 Expressive (`material3` 1.5.0-beta01) and still targets API 36. Dependencies and the Gradle distribution are pinned. The native build targets **ARM64 and x86_64**, Android 8/API 26 or later.
+Requirements: JDK 21, Go 1.27.2, Android SDK platform 37, build-tools 37.0.0, and NDK r29 (`29.0.14206865`). The app compiles against API 37 for Material 3 Expressive (`material3` 1.5.0-beta01) and still targets API 36. Dependencies and the Gradle distribution are pinned. The native build targets **ARM64 and x86_64**, Android 8/API 26 or later.
 
 ```sh
 export ANDROID_HOME="$HOME/Android/Sdk"
 export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
-# If needed: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865'
+# If needed: sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;29.0.14206865'
 bash scripts/build-wharf.sh
 ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
@@ -37,7 +37,7 @@ On this development machine, Go and NDK were installed under `.tools/`; the buil
 Build and sign a **standalone APK** first. Appfredo preserves its exact bytes. Create the release assets locally:
 
 ```sh
-export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"
+export PATH="$ANDROID_HOME/build-tools/37.0.0:$PATH"
 python3 scripts/prepare-release.py \
   --apk path/to/new-signed.apk \
   --previous-apk path/to/previous-signed.apk \

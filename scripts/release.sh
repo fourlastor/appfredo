@@ -32,7 +32,7 @@ while (( $# )); do
 done
 : "${APPFREDO_KEYSTORE:?Set APPFREDO_KEYSTORE and APPFREDO_KEYSTORE_PASSWORD: a release must be signed with the release key}"
 sdk="${ANDROID_HOME:-$HOME/Android/Sdk}"
-build_tools="${APPFREDO_BUILD_TOOLS:-$sdk/build-tools/36.0.0}"
+build_tools="${APPFREDO_BUILD_TOOLS:-$sdk/build-tools/37.0.0}"
 out="$root/build/release/$tag"
 work="$root/build/release/.work-$tag"
 rm -rf "$out" "$work"
