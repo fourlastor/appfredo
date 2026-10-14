@@ -10,9 +10,24 @@ android {
         applicationId = "app.appfredo"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        // Releases pass both from their git tag (scripts/release.sh); local builds stay at 0.1.0 (1).
+        versionCode = providers.gradleProperty("appfredo.versionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("appfredo.versionName").orNull ?: "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    // Release signing only happens when a key is supplied, as the release workflow does. Every release must be
+    // signed with the same key: Android refuses updates otherwise, and patches are built from earlier releases.
+    val releaseKeystore = providers.environmentVariable("APPFREDO_KEYSTORE").orNull
+    if (releaseKeystore != null) {
+        signingConfigs.create("release") {
+            val password = providers.environmentVariable("APPFREDO_KEYSTORE_PASSWORD").get()
+            storeFile = file(releaseKeystore)
+            storePassword = password
+            keyAlias = "appfredo"
+            // PKCS12 keystores, the only kind keytool makes today, use one password for the store and the key.
+            keyPassword = password
+        }
+        buildTypes.getByName("release").signingConfig = signingConfigs.getByName("release")
     }
     buildFeatures { compose = true }
     compileOptions {

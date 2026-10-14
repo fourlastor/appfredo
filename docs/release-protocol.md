@@ -26,7 +26,7 @@ A public GitHub repository's latest stable release contains an asset named `appf
 }
 ```
 
-All sizes are bytes. The placeholder hashes above must be replaced with real hashes. `patches` may be omitted or empty. Version codes are positive Android version codes; every patch's source code must be lower than the new one. The manifest package name, version code, and version name must match the signed APK. Artifact sizes must match GitHub's asset metadata and downloaded byte count; maximum supported size is 4 GiB.
+`patches` may list one entry per earlier release the publisher wants to support; Appfredo uses the one whose source matches the installed version. All sizes are bytes. The placeholder hashes above must be replaced with real hashes. `patches` may be omitted or empty. Version codes are positive Android version codes; every patch's source code must be lower than the new one. The manifest package name, version code, and version name must match the signed APK. Artifact sizes must match GitHub's asset metadata and downloaded byte count; maximum supported size is 4 GiB.
 
 Patches must be generated over directories containing exactly one file named `app.apk`:
 

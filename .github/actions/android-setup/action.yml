@@ -1,0 +1,21 @@
+name: Android build setup
+description: The JDK, Go, Android SDK packages and native Wharf library that every Appfredo build needs.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '21'
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: native/wharf/go.mod
+        cache: false
+    - name: Android tools
+      shell: bash
+      run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865'
+    - name: Build Wharf for Android
+      shell: bash
+      run: |
+        export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+        bash scripts/build-wharf.sh

@@ -45,11 +45,48 @@ python3 scripts/prepare-release.py \
   --out release-assets
 ```
 
-Omit `--previous-apk` for the first release. Put `butler` on `PATH` or supply `--butler /path/to/butler`. The helper reads the package and version from the APK, verifies APK signatures, checks package/signing-key continuity, and runs `butler diff --verify`. The output directory must be new or empty.
+Omit `--previous-apk` for the first release, or repeat it to ship a patch from each of several earlier releases; Appfredo picks the one matching the installed version. Put `butler` on `PATH` or supply `--butler /path/to/butler`. The helper reads the package and version from the APK, verifies APK signatures, checks package/signing-key continuity, and runs `butler diff --verify`. The output directory must be new or empty.
 
 Upload **all files in `release-assets` to the same public, stable GitHub Release**. The helper prepares files only; it never uploads or publishes anything. Add that repository in Appfredo, then tap **Get** or **Update**. Once the app is served, tap **Install**. The first time, Appfredo sends you to Android's settings to allow it to install apps and carries on when you return; Android's own confirmation follows. If you leave that prompt without answering, **Show prompt** brings it back.
 
 See [the release protocol](docs/release-protocol.md) for the manifest and patch layout.
+
+## Release Appfredo itself
+
+Pushing a version tag publishes a GitHub release that Appfredo can install, and update itself from, like any other app in its library:
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+After the usual build, tests and lint, the `release` job in `.github/workflows/build.yml` runs `scripts/release.sh` and attaches its output to a new stable release: `appfredo.json`, the signed `app.apk`, and a Wharf patch (with butler's `.sig`) from each of the three newest earlier releases. It downloads those releases' APKs to diff against, and uses butler 15.32.0, pinned by checksum. Patches that would not be smaller than the APK are left out. The release is created as a draft and published only once every asset is attached.
+
+Tags must look like `vMAJOR.MINOR.PATCH`. The versionCode is `MAJOR × 1,000,000 + MINOR × 1,000 + PATCH` (minor and patch up to 999), so every new tag outranks the last; `v0.2.0` is versionCode 2000.
+
+Before the first tag, create a release key and store it in the repository's Actions secrets. The key's alias must be `appfredo`:
+
+```sh
+keytool -genkeypair -v -keystore appfredo-release.jks -storetype PKCS12 -alias appfredo -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 appfredo-release.jks
+```
+
+| Secret | Value |
+| --- | --- |
+| `SIGNING_KEYSTORE` | The `base64` output above |
+| `SIGNING_PASSWORD` | The keystore's password, which a PKCS12 keystore also uses for the key |
+
+Keep the keystore backed up. Every release must be signed with the same key, or Android refuses the update and no patch can be built from earlier releases.
+
+To let Appfredo update itself, install it from a release rather than from a local debug build (which is signed with the debug key), then add this repository to its library.
+
+The script also runs locally, with `APPFREDO_KEYSTORE` set to the keystore file, `APPFREDO_KEYSTORE_PASSWORD` to its password, and either `gh` signed in or the earlier APKs given explicitly:
+
+```sh
+BUTLER=/path/to/butler scripts/release.sh v0.2.0 --previous-apk v0.1.0/app.apk
+```
+
+Set `APPFREDO_PATCH_RELEASES=0` to build without patches. The assets land in `build/release/<tag>/`.
 
 ## Tests
 

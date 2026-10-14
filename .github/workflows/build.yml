@@ -9,20 +9,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: native/wharf/go.mod
-          cache: false
-      - name: Android tools
-        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865'
-      - name: Build Wharf for Android
-        run: |
-          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
-          bash scripts/build-wharf.sh
+      - uses: ./.github/actions/android-setup
       - name: Test native patch verification
         run: |
           export GOPATH="$PWD/.tools/gopath" GOCACHE="$PWD/.tools/go-cache"
@@ -33,3 +20,59 @@ jobs:
         with:
           name: appfredo-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+  # Pushing a tag such as v1.2.0 publishes a GitHub release the store can install from: appfredo.json, the
+  # signed APK and Wharf patches from the last releases. Appfredo updates itself from it like any other app.
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: android
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    env:
+      BUTLER_VERSION: 15.32.0
+      # The butler binary in that archive; the same build was used to check Appfredo's patching end to end.
+      BUTLER_SHA256: 85ee65c71b59412a83d83bf332faab62c2c38f0ed569c9b13dadadf9823c7129
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/android-setup
+      - name: Butler
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/butler.zip" "https://broth.itch.zone/butler/linux-amd64/$BUTLER_VERSION/archive/default"
+          unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
+          echo "$BUTLER_SHA256  $RUNNER_TEMP/butler/butler" | sha256sum --check --strict
+          chmod +x "$RUNNER_TEMP/butler/butler"
+          "$RUNNER_TEMP/butler/butler" -V
+          echo "BUTLER=$RUNNER_TEMP/butler/butler" >> "$GITHUB_ENV"
+      - name: Release key
+        env:
+          SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          if [ -z "$SIGNING_KEYSTORE" ] || [ -z "$SIGNING_PASSWORD" ]; then
+            echo "::error::Set the SIGNING_KEYSTORE and SIGNING_PASSWORD secrets (see the README) before tagging a release"
+            exit 1
+          fi
+          printf '%s' "$SIGNING_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "APPFREDO_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+      - name: Assemble the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
+          APPFREDO_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: bash scripts/release.sh "$GITHUB_REF_NAME"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appfredo-${{ github.ref_name }}
+          path: build/release/${{ github.ref_name }}/
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Drafted first, so the store never sees the release before every asset is attached.
+          gh release create "$GITHUB_REF_NAME" build/release/"$GITHUB_REF_NAME"/* \
+            --draft --verify-tag --title "Appfredo ${GITHUB_REF_NAME#v}" --generate-notes
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest

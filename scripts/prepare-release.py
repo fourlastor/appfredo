@@ -46,7 +46,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apk", required=True, type=Path, help="New, already signed standalone APK")
     parser.add_argument("--name", required=True, help="App display name")
-    parser.add_argument("--previous-apk", type=Path)
+    parser.add_argument("--previous-apk", type=Path, action="append", default=[],
+                        help="An earlier signed APK of the same app; repeat it for patches from several releases")
     parser.add_argument("--out", required=True, type=Path, help="New or empty output directory")
     parser.add_argument("--butler", default="butler")
     parser.add_argument("--aapt", default="aapt")
@@ -60,14 +61,16 @@ def main():
     if code <= 0:
         parser.error("APK versionCode must be positive")
     keys = signing_keys(args.apk, args.apksigner)
-    previous = None
-    if args.previous_apk:
-        old_package, old_code, _ = package_info(args.previous_apk, args.aapt)
+    previous = {}  # versionCode -> APK
+    for old_apk in args.previous_apk:
+        old_package, old_code, _ = package_info(old_apk, args.aapt)
         if old_package != package or old_code >= code:
-            parser.error("Previous APK must be the same package with a lower versionCode")
-        if signing_keys(args.previous_apk, args.apksigner) != keys:
-            parser.error("Signing certificates differ; signing-key rotation is not supported by this helper")
-        previous = old_code
+            parser.error(f"{old_apk}: a previous APK must be the same package with a lower versionCode")
+        if signing_keys(old_apk, args.apksigner) != keys:
+            parser.error(f"{old_apk}: signing certificates differ; signing-key rotation is not supported by this helper")
+        if old_code in previous:
+            parser.error(f"Two previous APKs share versionCode {old_code}")
+        previous[old_code] = old_apk
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="appfredo-release-", dir=args.out.parent) as temporary:
         work = Path(temporary)
@@ -77,14 +80,22 @@ def main():
         shutil.copyfile(args.apk, apk)
         manifest = {"schemaVersion": 1, "packageName": package, "name": args.name,
                     "versionCode": code, "versionName": version, "apk": artifact(apk), "patches": []}
-        if previous is not None:
-            old, new = work / "old", work / "new"
-            old.mkdir(); new.mkdir()
-            shutil.copyfile(args.previous_apk, old / "app.apk")
-            shutil.copyfile(apk, new / "app.apk")
-            patch = staged / f"from-{previous}-to-{code}.pwr"
+        new = work / "new"
+        new.mkdir()
+        shutil.copyfile(apk, new / "app.apk")
+        for old_code, old_apk in sorted(previous.items(), reverse=True):
+            old = work / f"old-{old_code}"
+            old.mkdir()
+            shutil.copyfile(old_apk, old / "app.apk")
+            patch = staged / f"from-{old_code}-to-{code}.pwr"
             subprocess.run([args.butler, "diff", "--verify", str(old), str(new), str(patch)], check=True)
-            manifest["patches"].append({"fromVersionCode": previous, "fromSha256": sha256(args.previous_apk), **artifact(patch)})
+            if patch.stat().st_size >= apk.stat().st_size:
+                # Appfredo would never pick it over the full APK, so it is not worth uploading.
+                for leftover in (patch, patch.with_name(patch.name + ".sig")):
+                    leftover.unlink(missing_ok=True)
+                print(f"Skipped the patch from {old_code}: it is no smaller than the full APK")
+                continue
+            manifest["patches"].append({"fromVersionCode": old_code, "fromSha256": sha256(old_apk), **artifact(patch)})
         (staged / "appfredo.json").write_text(json.dumps(manifest, indent=2) + "\n")
         if args.out.exists():
             args.out.rmdir()  # Only an empty directory can be removed.
