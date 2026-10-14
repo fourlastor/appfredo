@@ -10,7 +10,7 @@ Your app butler. A native Android store for a personal collection of apps distri
 - Verify download lengths and SHA-256 hashes, the reconstructed APK hash, and its Android package/version/signing metadata.
 - Fall back to the full APK when the old APK does not match or a patch fails.
 - Submit the APK through `PackageInstaller` and let the user review Android's installation confirmation.
-- Keep a verified APK for future updates; remove superseded cached APKs after successful installation.
+- Keep a verified APK only until Android has installed it; later patches start from the installed APK, which Android keeps byte for byte.
 
 Kotlin/Jetpack Compose provides the app. A small Go wrapper embeds the existing Wharf library through `gomobile bind`. There is no butler daemon, downloaded executable, or itch.io account on the phone. Publishers use desktop butler to produce patches.
 
@@ -102,10 +102,10 @@ For Android integration tests, create signed disposable fixture APKs (requires d
 
 ```sh
 BUTLER=/path/to/butler bash scripts/make-test-releases.sh
-./gradlew :app:connectedDebugAndroidTest
+ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-These tests install/remove only `app.appfredo.fixture` and allow Appfredo's installation permission on the emulator. They cover full preparation, cached reuse, delta reconstruction from the installed APK, mismatched-base fallback, bad-patch fallback, and a user-confirmed installation. Do not run them on a personal device. To regenerate fixtures, remove `build/fixtures/releases` first; release outputs are never overwritten.
+These tests install/remove only `app.appfredo.fixture` and allow Appfredo's installation permission on the emulator. They cover full preparation, cached reuse, delta reconstruction from the installed APK, mismatched-base fallback, bad-patch fallback, and a user-confirmed installation. Do not run them on a personal device: Gradle installs and finally uninstalls Appfredo on every connected device, so set `ANDROID_SERIAL` to the emulator whenever a phone is plugged in. To regenerate fixtures, remove `build/fixtures/releases` first; release outputs are never overwritten.
 
 To look at the interface without a repository or a network, debug builds include a gallery that runs every screen state on sample data with a pretend store behind it:
 

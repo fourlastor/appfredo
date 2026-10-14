@@ -47,7 +47,11 @@ class InstallReceiver : BroadcastReceiver() {
         val result = when (status) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> InstallResult("Awaiting Android's approval",
                 intent.getParcelableExtra(Intent.EXTRA_INTENT))
-            PackageInstaller.STATUS_SUCCESS -> InstallResult("Installed, and at your service.", success = true)
+            PackageInstaller.STATUS_SUCCESS -> {
+                // Done here rather than in the view model, so it also happens when Appfredo has just replaced itself.
+                intent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME)?.let { preparedApks(context, it).deleteRecursively() }
+                InstallResult("Installed, and at your service.", success = true)
+            }
             PackageInstaller.STATUS_FAILURE_ABORTED -> InstallResult("As you wish. Nothing was changed.")
             else -> InstallResult("Android sent it back: ${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "error $status"}")
         }

@@ -22,7 +22,7 @@ class UpdateEngine(private val context: Context, private val github: ArtifactDow
         val manifest = release.manifest
         val current = installed(manifest.packageName)
         check(current == null || current.versionCode < manifest.versionCode) { "You already have this version, or a newer one." }
-        val directory = File(context.filesDir, "apks/${manifest.packageName}").apply { mkdirs() }
+        val directory = preparedApks(context, manifest.packageName).apply { mkdirs() }
         // A process killed during download/patching can leave uncommitted staging files.
         directory.listFiles()?.filter { it.name.startsWith(".wharf-") || it.name.endsWith(".part") }?.forEach { it.deleteRecursively() }
         val final = File(directory, "${manifest.apk.sha256}.apk")
@@ -39,8 +39,8 @@ class UpdateEngine(private val context: Context, private val github: ArtifactDow
         check(directory.usableSpace > manifest.apk.size * 3 + 16 * 1024 * 1024) { "There isn't enough free space to prepare this app." }
         var usedDelta = false
         if (delta != null) {
-            val cached = File(directory, "${delta.fromSha256}.apk")
-            val base = if (cached.exists()) cached else File(current!!.apkPath)
+            // Android keeps the installed APK byte for byte, and any app may read it: it is the patch's base.
+            val base = File(current!!.apkPath)
             report(Transfer("Inspecting the version you have"))
             if (runCatching { sha256(base) == delta.fromSha256 }.getOrDefault(false)) {
                 val patch = File(directory, "update.pwr")
@@ -79,11 +79,13 @@ class UpdateEngine(private val context: Context, private val github: ArtifactDow
         check(!signatures.isNullOrEmpty()) { "The APK isn't signed by its maker, so I won't serve it." }
         // Android's PackageInstaller performs final signature validation and upgrade-key matching.
     }
-
-    fun prune(packageName: String, keepHash: String) {
-        File(context.filesDir, "apks/$packageName").listFiles()?.filter { it.name != "$keepHash.apk" }?.forEach { it.deleteRecursively() }
-    }
 }
+
+/**
+ * Where [UpdateEngine.prepare] keeps an app's verified APK. It is only needed until Android has installed it:
+ * from then on the installed copy is the base for the next patch.
+ */
+fun preparedApks(context: Context, packageName: String) = File(context.filesDir, "apks/$packageName")
 
 fun formatBytes(bytes: Long): String = when {
     bytes < 1024 -> "$bytes B"

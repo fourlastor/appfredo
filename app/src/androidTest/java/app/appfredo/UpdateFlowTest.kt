@@ -43,6 +43,8 @@ class UpdateFlowTest {
         val old = File(context.cacheDir, "fixture-old.apk")
         instrumentation.context.assets.open("fixture/old.apk").use { input -> old.outputStream().use { input.copyTo(it) } }
         val session = context.packageManager.packageInstaller
+        val application = context.applicationContext as AppfredoApplication
+        application.installResult.value = null
         // Installing via the shell requires a shell-readable file in /data/local/tmp.
         instrumentation.uiAutomation.adoptShellPermissionIdentity("android.permission.INSTALL_PACKAGES")
         try {
@@ -55,8 +57,11 @@ class UpdateFlowTest {
                 s.commit(callback.intentSender)
             }
             waitFor { engine().installed(fixturePackage)?.versionCode == 1L }
+            // Appfredo's receiver reports this installation too, and clears prepared APKs as it does. Let it
+            // finish now rather than in the middle of the test.
+            waitFor { application.installResult.value?.success == true }
         } finally { instrumentation.uiAutomation.dropShellPermissionIdentity() }
-        (context.applicationContext as AppfredoApplication).installResult.value = null
+        application.installResult.value = null
     }
 
     @After fun cleanup() { File(context.filesDir, "apks/$fixturePackage").deleteRecursively() }
@@ -113,6 +118,8 @@ class UpdateFlowTest {
         waitFor { engine().installed(fixturePackage)?.versionCode == 2L }
         waitFor { app.installResult.value?.success == true }
         assertEquals(release.manifest.apk.sha256, sha256(File(engine().installed(fixturePackage)!!.apkPath)))
+        // Android's copy is the base from now on, so Appfredo keeps none of its own.
+        assertFalse(preparedApks(context, fixturePackage).exists())
     }
 
     private fun waitFor(check: () -> Boolean) {

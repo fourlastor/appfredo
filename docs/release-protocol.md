@@ -43,6 +43,6 @@ Do **not** give butler an APK as an archive to unpack. APKs are opaque files wit
 
 Butler also produces `from-1-to-2.pwr.sig`. Uploading it preserves compatibility with desktop butler verification; Appfredo itself uses the manifest's complete APK SHA-256, so it does not need to download the `.sig`.
 
-Appfredo selects a patch only if its source version matches the installed single APK and it is smaller than the full download. Before patching, it hashes the cached previous APK or Android's installed base APK. A missing/mismatched base, failed patch transfer, or reconstruction failure uses the complete APK instead. APK signing and the existing package's signing-key compatibility are finally enforced by Android's installer.
+Appfredo selects a patch only if its source version matches the installed single APK and it is smaller than the full download. Before patching, it hashes Android's installed base APK, which is the patch's base; Appfredo keeps no copy of its own once an installation succeeds. A missing/mismatched base, failed patch transfer, or reconstruction failure uses the complete APK instead. APK signing and the existing package's signing-key compatibility are finally enforced by Android's installer.
 
 The release helper currently accepts the same signing certificate set across versions. Legitimate key rotation needs a later extension to that helper. Publishers should keep their release signing key stable.

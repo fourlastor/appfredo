@@ -35,9 +35,7 @@ class StoreViewModel(application: Application) : AndroidViewModel(application) {
             (application as AppfredoApplication).installResult.collect { result ->
                 mutableState.update { it.copy(installResult = result) }
                 if (result?.success == true) {
-                    val apk = state.value.ready
-                    apk?.let { withContext(Dispatchers.IO) { engine.prune(it.manifest.packageName, it.manifest.apk.sha256) } }
-                    mutableState.update { it.copy(ready = null, served = apk?.manifest ?: it.served) }
+                    mutableState.update { it.copy(ready = null, served = it.ready?.manifest ?: it.served) }
                     refreshInstalled()
                 }
             }
