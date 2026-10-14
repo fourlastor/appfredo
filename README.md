@@ -14,16 +14,16 @@ Your app butler. A native Android store for a personal collection of apps distri
 
 Kotlin/Jetpack Compose provides the app. A small Go wrapper embeds the existing Wharf library through `gomobile bind`. There is no butler daemon, downloaded executable, or itch.io account on the phone. Publishers use desktop butler to produce patches.
 
-The visual identity uses forest green, warm ivory, and a serving cloche with a bow tie.
+The visual identity is banana yellow and tailcoat black: a butler, a serving cloche, and the banana under it. The illustrations and icons are vector artwork drawn in Compose (`app/src/main/java/app/appfredo/ui/art`); the theme follows the system's light or dark setting. Headlines are set in Fraunces and everything else in Figtree, both bundled under the SIL Open Font License (see `licenses/`).
 
 ## Build
 
-Requirements: JDK 21, Go 1.27.2, Android SDK platform 36, build-tools 36.0.0, and NDK r29 (`29.0.14206865`). Dependencies and the Gradle distribution are pinned. The native build targets **ARM64 and x86_64**, Android 8/API 26 or later.
+Requirements: JDK 21, Go 1.27.2, Android SDK platform 37, build-tools 36.0.0, and NDK r29 (`29.0.14206865`). The app compiles against API 37 for Material 3 Expressive (`material3` 1.5.0-beta01) and still targets API 36. Dependencies and the Gradle distribution are pinned. The native build targets **ARM64 and x86_64**, Android 8/API 26 or later.
 
 ```sh
 export ANDROID_HOME="$HOME/Android/Sdk"
 export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
-# If needed: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;29.0.14206865'
+# If needed: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865'
 bash scripts/build-wharf.sh
 ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
@@ -47,7 +47,7 @@ python3 scripts/prepare-release.py \
 
 Omit `--previous-apk` for the first release. Put `butler` on `PATH` or supply `--butler /path/to/butler`. The helper reads the package and version from the APK, verifies APK signatures, checks package/signing-key continuity, and runs `butler diff --verify`. The output directory must be new or empty.
 
-Upload **all files in `release-assets` to the same public, stable GitHub Release**. The helper prepares files only; it never uploads or publishes anything. Add that repository in Appfredo, refresh, and tap **Get app** or **Get update**. Once ready, tap **Install with Android**, enable installation from Appfredo if requested, return, and proceed to **Review installation**.
+Upload **all files in `release-assets` to the same public, stable GitHub Release**. The helper prepares files only; it never uploads or publishes anything. Add that repository in Appfredo, then tap **Get** or **Update**. Once the app is served, tap **Install**. The first time, Appfredo sends you to Android's settings to allow it to install apps and carries on when you return; Android's own confirmation follows. If you leave that prompt without answering, **Show prompt** brings it back.
 
 See [the release protocol](docs/release-protocol.md) for the manifest and patch layout.
 
@@ -69,6 +69,14 @@ BUTLER=/path/to/butler bash scripts/make-test-releases.sh
 ```
 
 These tests install/remove only `app.appfredo.fixture` and allow Appfredo's installation permission on the emulator. They cover full preparation, cached reuse, delta reconstruction from the installed APK, mismatched-base fallback, bad-patch fallback, and a user-confirmed installation. Do not run them on a personal device. To regenerate fixtures, remove `build/fixtures/releases` first; release outputs are never overwritten.
+
+To look at the interface without a repository or a network, debug builds include a gallery that runs every screen state on sample data with a pretend store behind it:
+
+```sh
+adb shell am start -n app.appfredo/.debug.GalleryActivity -e scene served -e theme dark
+```
+
+Scenes are `empty`, `library`, `fresh`, `checking`, `working`, `stitching`, `served`, `cancelled`, `confirming`, `done` and `trouble`; `theme` is `light` or `dark` and defaults to the system's. Add `--ez permission true` to see the step that asks for permission to install.
 
 The small native test data is synthetic binary content, not an installable APK. The Android integration fixtures are actual signed, resource-only APKs. See [validation](docs/validation.md) for recorded results and remaining boundaries.
 

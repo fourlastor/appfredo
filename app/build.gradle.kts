@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "app.appfredo"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         applicationId = "app.appfredo"
         minSdk = 26
@@ -23,12 +23,14 @@ android {
     sourceSets.getByName("androidTest").assets.srcDir("../native/wharf/testdata")
     sourceSets.getByName("androidTest").assets.srcDir("../build/fixtures/assets")
     lint { abortOnError = true }
+    // Lets JVM tests hold an android.content.Intent, which the screen logic only ever checks for presence.
+    testOptions { unitTests.isReturnDefaultValues = true }
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2025.11.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.activity:activity-compose:1.12.0")
-    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material3:material3:1.5.0-beta01")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")

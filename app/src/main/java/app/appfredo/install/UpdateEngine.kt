@@ -7,7 +7,7 @@ import app.appfredo.data.*
 import java.io.File
 import wharf.Wharf
 
-data class Transfer(val message: String, val fraction: Float? = null)
+data class Transfer(val message: String, val fraction: Float? = null, val detail: String? = null)
 data class PreparedApk(val file: File, val manifest: Manifest, val usedDelta: Boolean)
 
 class UpdateEngine(private val context: Context, private val github: ArtifactDownloader) {
@@ -21,47 +21,47 @@ class UpdateEngine(private val context: Context, private val github: ArtifactDow
     fun prepare(release: Release, report: (Transfer) -> Unit): PreparedApk {
         val manifest = release.manifest
         val current = installed(manifest.packageName)
-        check(current == null || current.versionCode < manifest.versionCode) { "This version or a newer one is already installed." }
+        check(current == null || current.versionCode < manifest.versionCode) { "You already have this version, or a newer one." }
         val directory = File(context.filesDir, "apks/${manifest.packageName}").apply { mkdirs() }
         // A process killed during download/patching can leave uncommitted staging files.
         directory.listFiles()?.filter { it.name.startsWith(".wharf-") || it.name.endsWith(".part") }?.forEach { it.deleteRecursively() }
         val final = File(directory, "${manifest.apk.sha256}.apk")
         if (final.exists()) {
-            report(Transfer("Checking saved APK"))
+            report(Transfer("Checking the pantry for a saved copy"))
             if (final.length() == manifest.apk.size && sha256(final) == manifest.apk.sha256) {
                 validate(final, manifest)
                 return PreparedApk(final, manifest, false)
             }
-            check(final.delete()) { "Could not replace an incomplete APK." }
+            check(final.delete()) { "I couldn't clear out a half-finished download." }
         }
         val delta = chooseDelta(manifest, current)
         // Reserve room for a copied base, reconstruction and download, plus filesystem overhead.
-        check(directory.usableSpace > manifest.apk.size * 3 + 16 * 1024 * 1024) { "Not enough free storage to prepare this APK." }
+        check(directory.usableSpace > manifest.apk.size * 3 + 16 * 1024 * 1024) { "There isn't enough free space to prepare this app." }
         var usedDelta = false
         if (delta != null) {
             val cached = File(directory, "${delta.fromSha256}.apk")
             val base = if (cached.exists()) cached else File(current!!.apkPath)
-            report(Transfer("Checking the previous APK"))
+            report(Transfer("Inspecting the version you have"))
             if (runCatching { sha256(base) == delta.fromSha256 }.getOrDefault(false)) {
                 val patch = File(directory, "update.pwr")
                 try {
                     github.download(release.assets.getValue(delta.file.asset), delta.file, patch) { done, total ->
-                        report(Transfer("Downloading update · ${formatBytes(done)} / ${formatBytes(total)}", done.toFloat() / total))
+                        report(Transfer("Fetching just the fresh bits", done.toFloat() / total, "${formatBytes(done)} of ${formatBytes(total)}"))
                     }
-                    report(Transfer("Preparing your update"))
+                    report(Transfer("Stitching the patch into place"))
                     Wharf.apply(base.absolutePath, patch.absolutePath, final.absolutePath, delta.fromSha256,
                         manifest.apk.sha256, manifest.apk.size)
                     usedDelta = true
                 } catch (e: Exception) {
                     final.delete()
-                    report(Transfer("Patch unavailable; downloading the full APK"))
+                    report(Transfer("The patch didn't take. Fetching the whole app."))
                 } finally { patch.delete() }
-            } else report(Transfer("Previous APK differs; downloading the full APK"))
+            } else report(Transfer("Your copy isn't the one I expected. Fetching the whole app."))
         }
         if (!usedDelta) github.download(release.assets.getValue(manifest.apk.asset), manifest.apk, final) { done, total ->
-            report(Transfer("Downloading APK · ${formatBytes(done)} / ${formatBytes(total)}", done.toFloat() / total))
+            report(Transfer("Fetching the whole app", done.toFloat() / total, "${formatBytes(done)} of ${formatBytes(total)}"))
         }
-        report(Transfer("Checking Android package"))
+        report(Transfer("One last inspection"))
         try { validate(final, manifest) } catch (e: Exception) { final.delete(); throw e }
         return PreparedApk(final, manifest, usedDelta)
     }
@@ -70,13 +70,13 @@ class UpdateEngine(private val context: Context, private val github: ArtifactDow
     private fun validate(file: File, manifest: Manifest) {
         val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else PackageManager.GET_SIGNATURES
         val info = context.packageManager.getPackageArchiveInfo(file.absolutePath, flags)
-            ?: error("The download is not a readable Android APK.")
+            ?: error("That download isn't a readable Android app.")
         val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
         check(info.packageName == manifest.packageName && code == manifest.versionCode && info.versionName == manifest.versionName) {
-            "APK package or version does not match the release manifest."
+            "The APK isn't what its release promised: package or version differs."
         }
         val signatures = if (Build.VERSION.SDK_INT >= 28) info.signingInfo?.apkContentsSigners else info.signatures
-        check(!signatures.isNullOrEmpty()) { "The APK must be signed by its publisher." }
+        check(!signatures.isNullOrEmpty()) { "The APK isn't signed by its maker, so I won't serve it." }
         // Android's PackageInstaller performs final signature validation and upgrade-key matching.
     }
 

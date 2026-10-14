@@ -45,11 +45,11 @@ class InstallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
         val result = when (status) {
-            PackageInstaller.STATUS_PENDING_USER_ACTION -> InstallResult("Ready for Android's confirmation",
+            PackageInstaller.STATUS_PENDING_USER_ACTION -> InstallResult("Awaiting Android's approval",
                 intent.getParcelableExtra(Intent.EXTRA_INTENT))
-            PackageInstaller.STATUS_SUCCESS -> InstallResult("Installed. At your service.", success = true)
-            PackageInstaller.STATUS_FAILURE_ABORTED -> InstallResult("Installation cancelled. Your previous app is unchanged.")
-            else -> InstallResult("Android could not install this APK: ${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "error $status"}")
+            PackageInstaller.STATUS_SUCCESS -> InstallResult("Installed, and at your service.", success = true)
+            PackageInstaller.STATUS_FAILURE_ABORTED -> InstallResult("As you wish. Nothing was changed.")
+            else -> InstallResult("Android sent it back: ${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "error $status"}")
         }
         (context.applicationContext as AppfredoApplication).installResult.value = result
     }

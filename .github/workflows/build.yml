@@ -18,7 +18,7 @@ jobs:
           go-version-file: native/wharf/go.mod
           cache: false
       - name: Android tools
-        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'ndk;29.0.14206865'
+        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;29.0.14206865'
       - name: Build Wharf for Android
         run: |
           export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"

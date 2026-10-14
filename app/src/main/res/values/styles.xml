@@ -1,9 +1,10 @@
 <resources>
+    <!-- Only what shows before Compose draws: the launch window matches the yellow top of the library. -->
     <style name="Theme.Appfredo" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:colorAccent">#285C4D</item>
-        <item name="android:windowBackground">#F6F5EF</item>
+        <item name="android:colorAccent">@color/tailcoat</item>
+        <item name="android:windowBackground">@color/peel</item>
     </style>
 </resources>

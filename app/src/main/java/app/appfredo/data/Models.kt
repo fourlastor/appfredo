@@ -11,14 +11,14 @@ data class RepoId(val owner: String, val name: String) {
             val slug = if (text.startsWith("https://")) {
                 val uri = URI(text)
                 require(uri.host == "github.com" && uri.port == -1 && uri.userInfo == null && uri.query == null && uri.fragment == null) {
-                    "Use a public github.com repository URL or owner/repository."
+                    "I only call at github.com. Try a repository link, or owner/repository."
                 }
                 uri.path.removePrefix("/")
             } else text
             val parts = slug.removeSuffix(".git").split('/')
             require(parts.size == 2 && parts[0].matches(Regex("[A-Za-z0-9][A-Za-z0-9-]{0,38}")) &&
                 parts[1].matches(Regex("[A-Za-z0-9_.-]{1,100}")) && parts[1] !in listOf(".", "..")) {
-                "Enter a repository as owner/repository."
+                "That doesn't look like owner/repository."
             }
             return RepoId(parts[0].lowercase(), parts[1].lowercase())
         }

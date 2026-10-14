@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Appfredo speaks as the butler: first person, courteous, a little dry. Buttons stay plain verbs. -->
+<resources>
+    <string name="app_name">Appfredo</string>
+    <string name="wordmark" translatable="false">appfredo</string>
+
+    <!-- Hero -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="hero_empty_title">The tray is empty.</string>
+    <string name="hero_empty_body">Hand me a GitHub repository and I’ll serve its app, fresh from the maker.</string>
+    <plurals name="hero_updates_title">
+        <item quantity="one">One update, ripe for the picking.</item>
+        <item quantity="other">%d updates, ripe for the picking.</item>
+    </plurals>
+    <string name="hero_updates_body">I’ll fetch only the bits that changed, wherever I can.</string>
+    <string name="hero_trouble_title">A spot of bother.</string>
+    <plurals name="hero_trouble_body">
+        <item quantity="one">One repository wouldn’t answer the door.</item>
+        <item quantity="other">%d repositories wouldn’t answer the door.</item>
+    </plurals>
+    <string name="hero_waiting_title">One moment, please.</string>
+    <string name="hero_waiting_body">I’m consulting the latest releases.</string>
+    <string name="hero_menu_title">On the menu today.</string>
+    <plurals name="hero_menu_body">
+        <item quantity="one">One app, ready when you are.</item>
+        <item quantity="other">%d apps, ready when you are.</item>
+    </plurals>
+    <string name="hero_fresh_title">Everything is fresh.</string>
+    <plurals name="hero_fresh_body">
+        <item quantity="one">One app in my care, and not a spot on it.</item>
+        <item quantity="other">%d apps in my care, and not a spot on them.</item>
+    </plurals>
+    <string name="hero_checked">Checked %s</string>
+    <string name="hero_checked_now">Checked just now</string>
+    <string name="action_check">Check for updates</string>
+    <string name="action_checking">Checking…</string>
+    <string name="action_add_first">Add your first app</string>
+    <string name="add_open">Add an app</string>
+    <string name="about_open">About Appfredo</string>
+
+    <!-- Library -->
+    <string name="search_hint">Find an app</string>
+    <string name="search_clear">Clear search</string>
+    <string name="filter_updates">Updates</string>
+    <string name="filter_updates_count">Updates · %d</string>
+    <string name="card_details">Show details</string>
+    <string name="status_fresh">Fresh · %s</string>
+    <string name="status_update">%1$s → %2$s</string>
+    <string name="status_update_spoken">Update from %1$s to %2$s</string>
+    <string name="status_available">%1$s · %2$s</string>
+    <string name="status_checking">Consulting the latest release…</string>
+    <string name="status_unchecked">Not checked yet</string>
+    <string name="status_busy">On its way…</string>
+    <string name="delta_line">Just %1$s to fetch, not %2$s</string>
+    <string name="action_get">Get</string>
+    <string name="action_update">Update</string>
+    <string name="action_open">Open</string>
+    <string name="action_retry">Try again</string>
+    <string name="action_check_now">Check now</string>
+    <string name="empty_updates_title">Nothing ripe just yet.</string>
+    <string name="empty_updates_body">Everything in my care is up to date. I’ll keep an eye out.</string>
+    <string name="empty_search_title">No one by that name, I’m afraid.</string>
+    <string name="empty_search_body">Try another app or repository.</string>
+    <string name="footer">Served fresh from GitHub. Patched with Wharf.</string>
+
+    <!-- How it works: the empty library and the About sheet share these -->
+    <string name="how_title">How I work</string>
+    <string name="how_source_title">Straight from the maker</string>
+    <string name="how_source_body">Apps arrive from the GitHub releases you choose. No middlemen, no accounts.</string>
+    <string name="how_fresh_title">Kept fresh</string>
+    <string name="how_fresh_body">When an update lands, I fetch only the bits that changed. Smaller downloads, same app.</string>
+    <string name="how_rules_title">Your rules</string>
+    <string name="how_rules_body">Nothing is installed without your nod. Android confirms every single one.</string>
+
+    <!-- Add an app -->
+    <string name="add_title">Whom shall I send for?</string>
+    <string name="add_body">Paste a public GitHub repository. I’ll look for an Appfredo manifest in its latest release.</string>
+    <string name="add_label">GitHub repository</string>
+    <string name="add_placeholder" translatable="false">owner/repository</string>
+    <string name="add_paste">Paste</string>
+    <string name="add_action">Add to library</string>
+
+    <!-- App details -->
+    <string name="details_installed">Installed</string>
+    <string name="details_latest">Latest</string>
+    <string name="details_download">Download</string>
+    <string name="details_none">None yet</string>
+    <string name="details_patch">Patch</string>
+    <string name="details_notes">Release notes</string>
+    <string name="details_no_notes">The maker left no notes with this release.</string>
+    <string name="details_no_release">I haven’t found an Appfredo release here yet.</string>
+    <string name="details_github">View on GitHub</string>
+    <string name="details_remove">Remove from library</string>
+    <string name="removed_message">%s has left the library.</string>
+    <string name="action_undo">Undo</string>
+
+    <!-- The serving tray: one download or installation at a time -->
+    <string name="tray_app_fallback">Your app</string>
+    <string name="tray_ready_title">%s is served.</string>
+    <string name="tray_ready_patch">Version %s, pieced together from a patch.</string>
+    <string name="tray_ready_full">Version %s, the full download.</string>
+    <string name="tray_install">Install</string>
+    <string name="tray_permission_title">A small formality.</string>
+    <string name="tray_permission_body">Android wants your permission before I may install apps. Allow it for Appfredo, then come back.</string>
+    <string name="tray_permission_action">Open settings</string>
+    <string name="tray_confirm_title">Android would like a word.</string>
+    <string name="tray_confirm_body">Approve the installation in Android’s prompt.</string>
+    <string name="tray_confirm_action">Show prompt</string>
+    <string name="tray_done_title">%s is installed.</string>
+    <string name="tray_done_body">Served, and at your service.</string>
+    <string name="tray_trouble_title">A slip-up.</string>
+    <string name="tray_dismiss">Dismiss</string>
+
+    <!-- About -->
+    <string name="about_title">Appfredo, at your service.</string>
+    <string name="about_body">I keep a personal collection of Android apps, fetched from the public GitHub releases you choose.</string>
+    <string name="about_makers_title">For app makers</string>
+    <string name="about_makers_body">Attach an appfredo.json manifest and a signed APK to a stable release. Add Wharf patches and updates shrink to a fraction of the size. If a patch won’t apply, I quietly fetch the full APK instead.</string>
+    <string name="about_limits_title">Not on the menu yet</string>
+    <string name="about_limits_body">Pre-releases, split APKs and automatic checks. For now, pull down on your library and I’ll take another look.</string>
+    <string name="about_version">Version %s</string>
+    <string name="about_fonts">Set in Fraunces and Figtree, under the SIL Open Font License.</string>
+    <string name="about_close">Carry on</string>
+</resources>

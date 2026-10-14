@@ -23,9 +23,9 @@ class GitHubClient(private val connectionFactory: (String) -> HttpURLConnection 
             val status = connection.responseCode
             check(status == 200) {
                 when (status) {
-                    404 -> "No public release found. Check the repository and publish a stable release."
-                    403, 429 -> "GitHub's request limit was reached. Try again later."
-                    else -> "Download failed (HTTP $status)."
+                    404 -> "No public release at that address. Check the repository, or ask its maker for a stable release."
+                    403, 429 -> "GitHub has asked me to wait a while. Try again later."
+                    else -> "GitHub wouldn't hand it over (HTTP $status)."
                 }
             }
             check(connection.url.protocol == "https") { "Insecure download redirect rejected." }
@@ -46,7 +46,7 @@ class GitHubClient(private val connectionFactory: (String) -> HttpURLConnection 
 
     fun latest(repo: RepoId): Release {
         val response = JSONObject(text("https://api.github.com/repos/${repo.slug}/releases/latest"))
-        check(!response.getBoolean("draft") && !response.getBoolean("prerelease")) { "Only stable releases are supported." }
+        check(!response.getBoolean("draft") && !response.getBoolean("prerelease")) { "Only stable releases are on the menu." }
         val assets = response.getJSONArray("assets")
         val urls = mutableMapOf<String, String>()
         val sizes = mutableMapOf<String, Long>()
@@ -59,7 +59,7 @@ class GitHubClient(private val connectionFactory: (String) -> HttpURLConnection 
             urls[name] = url
             sizes[name] = asset.getLong("size")
         }
-        val manifestUrl = urls["appfredo.json"] ?: error("This release needs an appfredo.json manifest. See the publisher guide.")
+        val manifestUrl = urls["appfredo.json"] ?: error("This release has no appfredo.json manifest, so I can't serve it.")
         val manifestText = text(manifestUrl)
         val manifest = Manifest.parse(manifestText)
         (listOf(manifest.apk) + manifest.patches.map { it.file }).forEach {
@@ -92,7 +92,7 @@ class GitHubClient(private val connectionFactory: (String) -> HttpURLConnection 
                             progress(count, artifact.size); lastProgress = count
                         }
                     }
-                    check(count == artifact.size) { "Download was incomplete. Please retry." }
+                    check(count == artifact.size) { "The download stopped short. Please try again." }
                 }
             }
             check(hash.digest().hex() == artifact.sha256) { "Download checksum does not match the release manifest." }
