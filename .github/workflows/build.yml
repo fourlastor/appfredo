@@ -77,6 +77,11 @@ jobs:
         with:
           name: appfredo-${{ github.ref_name }}
           path: build/release/${{ github.ref_name }}/
+      # R8 renames Appfredo's classes; this turns a release's stack traces back into readable ones.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: appfredo-${{ github.ref_name }}-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}

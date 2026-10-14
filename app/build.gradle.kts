@@ -29,6 +29,13 @@ android {
         }
         buildTypes.getByName("release").signingConfig = signingConfigs.getByName("release")
     }
+    buildTypes.getByName("release") {
+        // Appfredo's own code is what every update re-sends, so it is shrunk. The Wharf AAR brings its own keep
+        // rules for the classes its native library calls by name.
+        isMinifyEnabled = true
+        isShrinkResources = true
+        proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+    }
     buildFeatures { compose = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

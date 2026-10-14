@@ -62,6 +62,8 @@ git push origin v0.2.0
 
 After the usual build, tests and lint, the `release` job in `.github/workflows/build.yml` runs `scripts/release.sh` and attaches its output to a new stable release: `appfredo.json`, the signed `app.apk`, and a Wharf patch (with butler's `.sig`) from each of the three newest earlier releases. It downloads those releases' APKs to diff against, and uses butler 15.32.0, pinned by checksum. Patches that would not be smaller than the APK are left out. The release is created as a draft and published only once every asset is attached.
 
+Release builds are shrunk with R8, which keeps both the APK and its patches smaller; each run keeps the release's `mapping.txt` as a workflow artifact, for reading stack traces.
+
 Tags must look like `vMAJOR.MINOR.PATCH`. The versionCode is `MAJOR × 1,000,000 + MINOR × 1,000 + PATCH` (minor and patch up to 999), so every new tag outranks the last; `v0.2.0` is versionCode 2000.
 
 Before the first tag, create a release key and store it in the repository's Actions secrets. The key's alias must be `appfredo`:
